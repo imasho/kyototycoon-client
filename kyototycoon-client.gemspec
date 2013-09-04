@@ -8,8 +8,8 @@ Gem::Specification.new do |spec|
   spec.version       = Kyototycoon::Client::VERSION
   spec.authors       = ["imasho"]
   spec.email         = ["imasho@gmail.com"]
-  spec.description   = %q{TODO: Write a gem description}
-  spec.summary       = %q{TODO: Write a gem summary}
+  spec.description   = %q{KyotoTycoon binary access module, supports get(bulk), set(bulk), remove(bulk), and play LUA script.}
+  spec.summary       = %q{KyotoTycoon binary access module}
   spec.homepage      = ""
   spec.license       = "MIT"
 

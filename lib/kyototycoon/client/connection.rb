@@ -1,6 +1,7 @@
 require "socket"
-require "magic"
-require "flag"
+require "kyototycoon/client/magic"
+require "kyototycoon/client/flag"
+
 
 module Kyototycoon
   class Connection
@@ -26,26 +27,28 @@ module Kyototycoon
     end
 
     def set(records)
-      header_entries = [Kyototycoon::Magic::SET_BULK, Kyototycoon::Flag::RESERVED, records.length]
-      request = header_entries.pack("Cnn")
+      header_entries = [Magic::SET_BULK, Flag::RESERVED, records.length]
+      request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length, r.value.length, 0, r.expire.to_i]
+        body_entries = [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF]
         body = body_entries.pack("nNNNN") + r.key + r.value
         request = request + body
       end
 
       @socket.write(request)
       response = @socket.read(5) 
+      raise "no response" unless response
+
       magic, count = response.unpack("CN")
-      raise "invalid protocol header" unless magic == Kyototycoon::Magic::SET_BULK
+      raise "invalid protocol header" unless magic == Magic::SET_BULK
 
       count.to_i # number of registerd
     end
 
     def get(records)
-      header_entries = [Kyototycoon::Magic::GET_BULK, Kyototycoon::Flag::RESERVED, records.length]
-      request = header_entries.pack("Cnn")
+      header_entries = [Magic::GET_BULK, Flag::RESERVED, records.length]
+      request = header_entries.pack("CNN")
 
       records.each do |r|
         body_entries = [r.db_id, r.key.length]
@@ -55,24 +58,29 @@ module Kyototycoon
 
       @socket.write(request)
       res_header = @socket.read(5)
-      magic, count = response.unpack("CN")
-      raise "invalid protocol header" unless magic == Kyototycoon::Magic::GET_BULK
+      raise "no response" unless res_header
+
+      magic, count = res_header.unpack("CN")
+      raise "invalid protocol header" unless magic == Magic::GET_BULK
 
       results = []
       count.times do |i|
         res_body = @socket.read(18)
+
         dbid, keysize, valuesize, ext_expire, expire = res_body.unpack("nNNNN")
+        expire = ext_expire << 32 | expire
+
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(dbid, key, value, expire))
+        results.push(Record.new(key, value, dbid, expire))
       end
 
       results
     end
 
-    def remove
-      header_entries = [Kyototycoon::Magic::REMOVE_BULK, Kyototycoon::Flag::RESERVED, records.length]
-      request = header_entries.pack("Cnn")
+    def remove(records)
+      header_entries = [Magic::REMOVE_BULK, Flag::RESERVED, records.length]
+      request = header_entries.pack("CNN")
 
       records.each do |r|
         body_entries = [r.db_id, r.key.length]
@@ -83,15 +91,17 @@ module Kyototycoon
     
       @socket.write(request)
       response = @socket.read(5) 
+      raise "no response" unless response
+
       magic, count = response.unpack("CN")
-      raise "invalid protocol header" unless magic == Kyototycoon::Magic::REMOVE_BULK
+      raise "invalid protocol header" unless magic == Magic::REMOVE_BULK
 
       count.to_i # number of registerd
     end
 
-    def script
-      header_entries = [Kyototycoon::Magic::PLAY_SCRIPT, Kyototycoon::Flag::RESERVED, records.length]
-      request = header_entries.pack("Cnn")
+    def script(records)
+      header_entries = [Magic::PLAY_SCRIPT, Flag::RESERVED, records.length]
+      request = header_entries.pack("CNN")
 
       records.each do |r|
         body_entries = [r.key.length, r.value.length]
@@ -101,8 +111,10 @@ module Kyototycoon
 
       @socket.write(request)
       res_header = @socket.read(5)
-      magic, count = response.unpack("CN")
-      raise "invalid protocol header" unless magic == Kyototycoon::Magic::PLAY_SCRIPT
+      raise "no response" unless res_header
+
+      magic, count = res_header.unpack("CN")
+      raise "invalid protocol header" unless magic == Magic::PLAY_SCRIPT
 
       results = []
       count.times do |i|
@@ -110,10 +122,12 @@ module Kyototycoon
         keysize, valuesize = res_body.unpack("NN")
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(0, key, value, 0))
+        results.push(Record.new(key, value, 0, 0))
       end
 
       results
     end
   end
 end
+
+

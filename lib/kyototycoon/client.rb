@@ -1,5 +1,6 @@
 require "kyototycoon/client/version"
 require "kyototycoon/client/record"
+require "kyototycoon/client/connection"
 
 module Kyototycoon
   class Client
@@ -9,7 +10,7 @@ module Kyototycoon
       @host = host
       @port = port
       @timeout_ms = timeout_ms
-      @connection = Kyototycoon::Connection.new(@host, @port, @timeout_ms)
+      @connection = Connection.new(@host, @port, @timeout_ms)
     end
 
     def open
@@ -22,51 +23,63 @@ module Kyototycoon
     end
 
     def set(key, value)
-      self.set_bulk({key => value})
+      set_bulk({key => value}) == 1 ? true : false
     end
 
     def get(key)
-      self.get_bulk([key])[0]
+      get_bulk([key])[key]
     end
 
     def remove(key)
-      self.remove_bulk([key])
+      remove_bulk([key]) == 1 ? true : false
     end
 
     def script(method, key, value)
-      self.script_bulk(method, { key => value } ) 
+      script_bulk(method, { key => value } ) 
     end
 
     def set_bulk(keyvalues)
+      raise "connection closed" unless @connection.is_open
+
       records = []
       keyvalues.each do |k, v|
-        records.push(Record.new(0, k, v, 0)
+        records.push(Record.new(k, v))
       end
       @connection.set(records)
     end
 
     def get_bulk(keys)
+      raise "connection closed" unless @connection.is_open
+
       records = []
       keys.each do |k|
-        records.push(Record.new(0, k, nil, 0)
+        records.push(Record.new(k, nil))
       end
-      @connection.get(records)
+      results = @connection.get(records)
+      return {} if results == nil
+      results.inject({}) {|map, rec| map[rec.key] = rec.value; map;}
     end
 
     def remove_bulk(keys)
+      raise "connection closed" unless @connection.is_open
+
       records = []
       keys.each do |k|
-        records.push(Record.new(0, k, nil, 0)
+        records.push(Record.new(k, nil))
       end 
       @connection.remove(records)
     end
 
     def script_bulk(method, keyvalues)
+      raise "connection closed" unless @connection.is_open
+
       records = []
       keyvalues.each do |k, v|
-        records.push(Record.new(0, k, v, 0)
+        records.push(Record.new(k, v))
       end
-      @connection.script(records)
+      results = @connection.script(records)
+      return {} if results == nil
+      results.inject({}) {|map, rec| map[rec.key] = rec.value; map;}
     end
   end
 end

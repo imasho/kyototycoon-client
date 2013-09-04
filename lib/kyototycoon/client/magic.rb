@@ -1,4 +1,4 @@
-module KyotoTycoon
+module Kyototycoon
   module Magic
     SET_BULK    = 0xB8
     REMOVE_BULK = 0xB9
