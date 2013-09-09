@@ -11,6 +11,11 @@ Bundler::GemHelper.new(Dir.pwd).instance_eval do
   task 'install' do
     install_gem
   end
+
+  desc "benchmark module"
+  task 'benchmark' do
+    system "ruby test/benchmark.rb #{ENV["HOST"]} #{ENV["PORT"]}"
+  end
 end
 
 
