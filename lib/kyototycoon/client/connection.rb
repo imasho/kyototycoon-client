@@ -2,7 +2,6 @@ require "socket"
 require "kyototycoon/client/magic"
 require "kyototycoon/client/flag"
 
-
 module Kyototycoon
   class Connection
     attr_reader :host, :port, :timeout_ms, :socket, :is_open
@@ -31,8 +30,8 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF]
-        request << body_entries.pack("nNNNN") << r.key << r.value
+        request << [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF].pack("nNNNN")  <<
+                    r.key << r.value
       end
 
       @socket.write(request)
@@ -50,8 +49,7 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length]
-        request << body_entries.pack("nN") << r.key
+        request << [r.db_id, r.key.length].pack("nN") << r.key
       end
 
       @socket.write(request)
@@ -81,8 +79,7 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length]
-        request << body_entries.pack("nN") << r.key
+        request <<  [r.db_id, r.key.length].pack("nN") << r.key
       end
     
       @socket.write(request)
@@ -100,8 +97,7 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.key.length, r.value.length]
-        request << body_entries.pack("NN") << r.key << r.value
+        request << [r.key.length, r.value.length].pack("NN") << r.key << r.value
       end
 
       @socket.write(request)

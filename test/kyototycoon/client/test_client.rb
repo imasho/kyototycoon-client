@@ -37,11 +37,18 @@ class ClientTest < Test::Unit::TestCase
     @client.open
     assert_equal(@client.set_bulk( {"key1" => ["value1", 1]} ), 1)   # expire after 1 second
     assert_equal(@client.set_bulk( {"key2" => "value2"} ), 1)        # not expire
+    assert_equal(@client.set("key3", "value3"), true)                # not expire
+    assert_equal(@client.set("key4", "value4", 1), true)             # expire after 1 second
+
     assert_equal(@client.get("key1"), "value1")
     assert_equal(@client.get("key2"), "value2")
+    assert_equal(@client.get("key3"), "value3")
+    assert_equal(@client.get("key4"), "value4")
     sleep 3
     assert_equal(@client.get("key1"), nil)
     assert_equal(@client.get("key2"), "value2")
+    assert_equal(@client.get("key3"), "value3")
+    assert_equal(@client.get("key4"), nil)
     @client.close
   end
 

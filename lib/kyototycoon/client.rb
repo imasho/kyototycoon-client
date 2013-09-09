@@ -22,7 +22,7 @@ module Kyototycoon
       @connection.close
     end
 
-    def set(key, value, expire=0, dbid=0)
+    def set(key, value, expire=Record::MAX_EXPIRE_SECONDS, dbid=0)
       set_bulk({key => [value, expire]}, dbid) == 1 ? true : false
     end
 
