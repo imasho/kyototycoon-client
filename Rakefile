@@ -14,7 +14,13 @@ Bundler::GemHelper.new(Dir.pwd).instance_eval do
 
   desc "benchmark module"
   task 'benchmark' do
-    system "ruby test/benchmark.rb #{ENV["HOST"]} #{ENV["PORT"]}"
+    raise "host and port reauired: rake benchmark HOST=[HOST] PORT=[PORT]" if !ENV["HOST"] || !ENV["PORT"]
+
+    if ENV["COUNT"].to_i > 0
+      system "ruby test/benchmark.rb #{ENV["HOST"]} #{ENV["PORT"]} #{ENV["COUNT"]}"
+    else
+      system "ruby test/benchmark.rb #{ENV["HOST"]} #{ENV["PORT"]}"
+    end
   end
 end
 
