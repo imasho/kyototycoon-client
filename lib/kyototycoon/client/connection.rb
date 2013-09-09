@@ -32,8 +32,7 @@ module Kyototycoon
 
       records.each do |r|
         body_entries = [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF]
-        body = body_entries.pack("nNNNN") + r.key + r.value
-        request = request + body
+        request << body_entries.pack("nNNNN") << r.key << r.value
       end
 
       @socket.write(request)
@@ -52,8 +51,7 @@ module Kyototycoon
 
       records.each do |r|
         body_entries = [r.db_id, r.key.length]
-        body = body_entries.pack("nN") + r.key
-        request = request + body
+        request << body_entries.pack("nN") << r.key
       end
 
       @socket.write(request)
@@ -84,10 +82,8 @@ module Kyototycoon
 
       records.each do |r|
         body_entries = [r.db_id, r.key.length]
-        body = body_entries.pack("nN") + r.key
-        request = request + body
+        request << body_entries.pack("nN") << r.key
       end
-
     
       @socket.write(request)
       response = @socket.read(5) 
@@ -105,8 +101,7 @@ module Kyototycoon
 
       records.each do |r|
         body_entries = [r.key.length, r.value.length]
-        body = body_entries.pack("NN") + r.key + r.value
-        request = request + body
+        request << body_entries.pack("NN") << r.key << r.value
       end
 
       @socket.write(request)
