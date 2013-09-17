@@ -2,6 +2,11 @@
 
 KyotoTycoon ruby client with TCP connection and binary protocol.
 
+## Changelog
+
+* 0.0.2: Add dbid parameter to remove_bulk
+
+
 ## Installation
 
 Add this line to your application's Gemfile:
