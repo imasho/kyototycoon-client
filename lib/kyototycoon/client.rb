@@ -64,12 +64,12 @@ module Kyototycoon
       results.inject({}) {|map, rec| map[rec.key] = rec.value; map;}
     end
 
-    def remove_bulk(keys)
+    def remove_bulk(keys, dbid=0)
       raise "connection closed" unless @connection.is_open
 
       records = []
       keys.each do |k|
-        records.push(Record.new(k, nil))
+        records.push(Record.new(k, nil, nil, dbid))
       end 
       @connection.remove(records)
     end
