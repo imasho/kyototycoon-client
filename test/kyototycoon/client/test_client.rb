@@ -1,9 +1,13 @@
 require "helper"
 
 class ClientTest < Test::Unit::TestCase
+
+  HOST = ENV["HOST"] || "localhost"
+  PORT = (ENV["PORT"] || 1978).to_i
+
   def setup
-    raise "host and port of KyotoTycoon test server is required: rake test HOST=xxx PORT=xxx" if (!ENV["HOST"] || !ENV["PORT"])
-    @client = Kyototycoon::Client.new(ENV["HOST"], ENV["PORT"].to_i) 
+    raise "host and port of KyotoTycoon test server is required: rake test HOST=xxx PORT=xxx" if (!HOST || !PORT)
+    @client = Kyototycoon::Client.new(HOST, PORT)
   end
 
   def test_open
@@ -25,10 +29,10 @@ class ClientTest < Test::Unit::TestCase
   def test_clud_bulk
     @client.open
     assert_equal( @client.set_bulk( {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} ), 3)
-    assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ), 
+    assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
                                     {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} )
     assert_equal( @client.remove_bulk( ["key1", "key2"] ), 2 )
-    assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ), 
+    assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
                                     {"key3" => "valueC"} )
     @client.close
   end
