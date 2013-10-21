@@ -28,6 +28,8 @@ class ClientTest < Test::Unit::TestCase
 
   def test_clud_bulk
     @client.open
+    @client.remove_bulk(["key1", "key2", "key3", "key4"])
+
     assert_equal( @client.set_bulk( {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} ), 3)
     assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
                   {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} )
