@@ -81,9 +81,9 @@ module Kyototycoon
       records.each do |r|
         request <<  [r.db_id, r.key.length].pack("nN") << r.key
       end
-    
+
       @socket.write(request)
-      response = @socket.read(5) 
+      response = @socket.read(5)
       raise "no response" unless response
 
       magic, count = response.unpack("CN")

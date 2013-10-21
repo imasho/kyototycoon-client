@@ -35,10 +35,11 @@ module Kyototycoon
     end
 
     def script(method, key, value)
-      script_bulk(method, { key => value } ) 
+      script_bulk(method, { key => value } )
     end
 
     def set_bulk(keyvalues, dbid = 0)
+      return 0 if keyvalues.empty?
       raise "connection closed" unless @connection.is_open
 
       records = []
@@ -53,6 +54,7 @@ module Kyototycoon
     end
 
     def get_bulk(keys, dbid=0)
+      return [] if keys.empty?
       raise "connection closed" unless @connection.is_open
 
       records = []
@@ -65,12 +67,13 @@ module Kyototycoon
     end
 
     def remove_bulk(keys, dbid=0)
+      return 0 if keys.empty?
       raise "connection closed" unless @connection.is_open
 
       records = []
       keys.each do |k|
         records.push(Record.new(k, nil, nil, dbid))
-      end 
+      end
       @connection.remove(records)
     end
 

@@ -30,10 +30,10 @@ class ClientTest < Test::Unit::TestCase
     @client.open
     assert_equal( @client.set_bulk( {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} ), 3)
     assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
-                                    {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} )
+                  {"key1" => "valueA", "key2" => "valueB", "key3" => "valueC"} )
     assert_equal( @client.remove_bulk( ["key1", "key2"] ), 2 )
     assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
-                                    {"key3" => "valueC"} )
+                  {"key3" => "valueC"} )
     @client.close
   end
 
@@ -65,6 +65,39 @@ class ClientTest < Test::Unit::TestCase
     @client.close
   end
 
+  def test_empty_records
+    client = Kyototycoon::Client.new(HOST, PORT)
+    client.instance_eval do |obj|
+      class << self
+        define_method :connection=, Proc.new { |connection|
+          @connection = connection
+        }
+      end
+    end
+
+    mock = MockConnection.new
+    client.connection = mock
+
+    client.get_bulk([])
+    assert_equal false, mock.called_get?
+
+    client.set_bulk([])
+    assert_equal false, mock.called_set?
+
+    client.remove_bulk([])
+    assert_equal false, mock.called_remove?
+
+    client.get(1)
+    assert_equal true, mock.called_get?
+
+    client.set(1, 1)
+    assert_equal true, mock.called_set?
+
+    client.remove(1)
+    assert_equal true, mock.called_remove?
+  end
+
+
   # def test_script
   #   return unless @client
 
@@ -73,4 +106,43 @@ class ClientTest < Test::Unit::TestCase
   #  assert_equal( @client.script_bulk("dummy", {}), {} )
   #  @client.close
   # end
+end
+
+class MockConnection
+  def initialize
+    @get    = false
+    @set    = false
+    @remove = false
+  end
+
+  def is_open
+    true
+  end
+
+  def get(records)
+    @get = true
+    []
+  end
+
+  def set(records)
+    @set = true
+    0
+  end
+
+  def remove(records)
+    @remove = true
+    true
+  end
+
+  def called_get?
+    @get
+  end
+
+  def called_set?
+    @set
+  end
+
+  def called_remove?
+    @remove
+  end
 end
