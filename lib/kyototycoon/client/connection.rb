@@ -29,9 +29,13 @@ module Kyototycoon
       header_entries = [Magic::SET_BULK, Flag::RESERVED, records.length]
       request = header_entries.pack("CNN")
 
-      records.each do |r|
-        request << [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF].pack("nNNNN")  <<
-                    r.key << r.value
+      records.each do |r| 
+        request << [r.db_id,
+                    r.key.dup.force_encoding('binary').length,
+                    r.value.force_encoding('binary').length, 
+                    r.expire.to_i >> 32, 
+                    r.expire.to_i & 0x00000000FFFFFFFF].pack("nN*")  <<  
+                    r.key.dup.force_encoding('binary') << r.value.force_encoding('binary')
       end
 
       @socket.write(request)
@@ -63,7 +67,7 @@ module Kyototycoon
       count.times do |i|
         res_body = @socket.read(18)
 
-        dbid, keysize, valuesize, ext_expire, expire = res_body.unpack("nNNNN")
+        dbid, keysize, valuesize, ext_expire, expire = res_body.unpack("nN*")
         expire = ext_expire << 32 | expire
 
         key = @socket.read(keysize)
