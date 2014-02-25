@@ -30,12 +30,10 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r| 
-        request << [r.db_id,
-                    r.key.dup.force_encoding('binary').length,
-                    r.value.force_encoding('binary').length, 
-                    r.expire.to_i >> 32, 
-                    r.expire.to_i & 0x00000000FFFFFFFF].pack("nN*")  <<  
-                    r.key.dup.force_encoding('binary') << r.value.force_encoding('binary')
+        k = r.key.dup.force_encoding("binary")
+        v = r.value.force_encoding("binary")
+        request << [r.db_id, k.length, v.length, r.expire.to_i >> 32, 
+                    r.expire.to_i & 0x00000000FFFFFFFF].pack("nN*") << k << v
       end
 
       @socket.write(request)
@@ -53,7 +51,8 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        request << [r.db_id, r.key.length].pack("nN") << r.key
+        k = r.key.dup.force_encoding('binary')
+        request << [r.db_id, k.length].pack("nN") << k
       end
 
       @socket.write(request)
@@ -72,9 +71,8 @@ module Kyototycoon
 
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(key, value, dbid, expire))
+        results.push(Record.new(key.dup.force_encoding('UTF-8'), value.force_encoding('UTF-8'), expire, dbid))
       end
-
       results
     end
 
@@ -83,7 +81,8 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        request <<  [r.db_id, r.key.length].pack("nN") << r.key
+        k = r.key.dup.force_encoding('binary')
+        request <<  [r.db_id, k.length].pack("nN") << k
       end
 
       @socket.write(request)
@@ -101,7 +100,9 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        request << [r.key.length, r.value.length].pack("NN") << r.key << r.value
+        k = r.key.dup.force_encoding("binary")
+        v = r.value.force_encoding("binary")
+        request << [k.length, v.length].pack("NN") << k << v
       end
 
       @socket.write(request)
@@ -117,7 +118,7 @@ module Kyototycoon
         keysize, valuesize = res_body.unpack("NN")
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(key, value, 0, 0))
+        results.push(Record.new(key.dup.force_encoding('UTF-8'), value.force_encoding('UTF-8'), 0, 0))
       end
 
       results
