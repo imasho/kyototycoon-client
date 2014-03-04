@@ -2,7 +2,6 @@ require "socket"
 require "kyototycoon/client/magic"
 require "kyototycoon/client/flag"
 
-
 module Kyototycoon
   class Connection
     attr_reader :host, :port, :timeout_ms, :socket, :is_open
@@ -30,10 +29,11 @@ module Kyototycoon
       header_entries = [Magic::SET_BULK, Flag::RESERVED, records.length]
       request = header_entries.pack("CNN")
 
-      records.each do |r|
-        body_entries = [r.db_id, r.key.length, r.value.length, r.expire.to_i >> 32, r.expire.to_i & 0x00000000FFFFFFFF]
-        body = body_entries.pack("nNNNN") + r.key + r.value
-        request = request + body
+      records.each do |r| 
+        k = r.key.dup.force_encoding("binary")
+        v = r.value.force_encoding("binary")
+        request << [r.db_id, k.length, v.length, r.expire.to_i >> 32, 
+                    r.expire.to_i & 0x00000000FFFFFFFF].pack("nN*") << k << v
       end
 
       @socket.write(request)
@@ -51,9 +51,8 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length]
-        body = body_entries.pack("nN") + r.key
-        request = request + body
+        k = r.key.dup.force_encoding('binary')
+        request << [r.db_id, k.length].pack("nN") << k
       end
 
       @socket.write(request)
@@ -67,14 +66,13 @@ module Kyototycoon
       count.times do |i|
         res_body = @socket.read(18)
 
-        dbid, keysize, valuesize, ext_expire, expire = res_body.unpack("nNNNN")
+        dbid, keysize, valuesize, ext_expire, expire = res_body.unpack("nN*")
         expire = ext_expire << 32 | expire
 
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(key, value, dbid, expire))
+        results.push(Record.new(key.dup.force_encoding('UTF-8'), value.force_encoding('UTF-8'), expire, dbid))
       end
-
       results
     end
 
@@ -83,14 +81,12 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.db_id, r.key.length]
-        body = body_entries.pack("nN") + r.key
-        request = request + body
+        k = r.key.dup.force_encoding('binary')
+        request <<  [r.db_id, k.length].pack("nN") << k
       end
 
-    
       @socket.write(request)
-      response = @socket.read(5) 
+      response = @socket.read(5)
       raise "no response" unless response
 
       magic, count = response.unpack("CN")
@@ -104,9 +100,9 @@ module Kyototycoon
       request = header_entries.pack("CNN")
 
       records.each do |r|
-        body_entries = [r.key.length, r.value.length]
-        body = body_entries.pack("NN") + r.key + r.value
-        request = request + body
+        k = r.key.dup.force_encoding("binary")
+        v = r.value.force_encoding("binary")
+        request << [k.length, v.length].pack("NN") << k << v
       end
 
       @socket.write(request)
@@ -122,7 +118,7 @@ module Kyototycoon
         keysize, valuesize = res_body.unpack("NN")
         key = @socket.read(keysize)
         value = @socket.read(valuesize)
-        results.push(Record.new(key, value, 0, 0))
+        results.push(Record.new(key.dup.force_encoding('UTF-8'), value.force_encoding('UTF-8'), 0, 0))
       end
 
       results
