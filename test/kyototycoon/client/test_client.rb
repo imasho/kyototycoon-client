@@ -47,6 +47,8 @@ class ClientTest < Test::Unit::TestCase
     assert_equal( @client.remove_bulk( ["key1", "key2"] ), 2 )
     assert_equal( @client.get_bulk( ["key1", "key2", "key3", "key4"] ),
                   {"key3" => "valueC"} )
+
+    assert_equal( @client.get_bulk([]), {})
     @client.close
   end
 

@@ -54,7 +54,7 @@ module Kyototycoon
     end
 
     def get_bulk(keys, dbid=0)
-      return [] if keys.empty?
+      return {} if keys.empty?
       raise "connection closed" unless @connection.is_open
 
       records = []
