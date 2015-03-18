@@ -95,9 +95,10 @@ module Kyototycoon
       count.to_i # number of registerd
     end
 
-    def script(records)
-      header_entries = [Magic::PLAY_SCRIPT, Flag::RESERVED, records.length]
-      request = header_entries.pack("CNN")
+    def script(method, records)
+      header_entries = [Magic::PLAY_SCRIPT, Flag::RESERVED, method.length, records.length]
+      request = header_entries.pack("CNNN")
+      request << method.dup.force_encoding("binary")
 
       records.each do |r|
         k = r.key.dup.force_encoding("binary")

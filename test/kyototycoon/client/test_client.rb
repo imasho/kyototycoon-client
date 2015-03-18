@@ -147,14 +147,15 @@ class ClientTest < Test::Unit::TestCase
   end
 
 
-  # def test_script
-  #   return unless @client
+  def test_script
+    return unless ENV["SCRIPT"].to_i == 1
+    return unless @client
 
-  #  @client.open
-  #  assert_equal( @client.script("dummy", "key", "value"), {} )
-  #  assert_equal( @client.script_bulk("dummy", {}), {} )
-  #  @client.close
-  # end
+    @client.open
+    assert_equal( @client.script("echo", "key", "value"), {"key" => "value"} )
+    assert_equal( @client.script_bulk("echo", {"key" => "value", "foo" => "bar"}), {"key" => "value", "foo" => "bar"} )
+    @client.close
+  end
 end
 
 class MockConnection

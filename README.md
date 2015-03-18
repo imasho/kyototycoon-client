@@ -5,6 +5,10 @@ KyotoTycoon ruby client with TCP connection and binary protocol.
 ## Changelog
 
 * 0.0.2: Add dbid parameter to remove_bulk
+* 0.0.3: Do nothing if record is empty
+* 0.0.4: Support multibyte characters
+* 0.0.5: Fixed empty key bug
+* 0.0.6: Fixed script protocol bug
 
 
 ## Installation
@@ -75,3 +79,8 @@ Client receives response as key-value set format.
     => {"keyX" => "valueX", "keyY" => "valueY", ... } 
 
 Number of key sent and number of key received are depend on LUA function definition.
+
+You can test script protocol as below:
+
+    ktserver -port [your port] -scr test/lua/echo.lua
+    rake test HOST=localhost PORT=[your port] SCRIPT=1

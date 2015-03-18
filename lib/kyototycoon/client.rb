@@ -84,7 +84,7 @@ module Kyototycoon
       keyvalues.each do |k, v|
         records.push(Record.new(k, v))
       end
-      results = @connection.script(records)
+      results = @connection.script(method, records)
       return {} if results == nil
       results.inject({}) {|map, rec| map[rec.key] = rec.value; map;}
     end
